@@ -80,9 +80,19 @@ vim.pack.add({
     -- Formatting
     gh("stevearc/conform.nvim"),
 
+    -- Debugging. nvim-dap-ui needs nvim-nio; the Java adapter comes from
+    -- mason's java-debug-adapter and is wired up by nvim-jdtls.
+    gh("mfussenegger/nvim-dap"),
+    gh("nvim-neotest/nvim-nio"),
+    gh("rcarriga/nvim-dap-ui"),
+    gh("theHamsta/nvim-dap-virtual-text"),
+
     -- Language extras
     gh("nvim-flutter/flutter-tools.nvim"),
     gh("joeveiga/ng.nvim"),
+    -- Java / Minecraft modding. jdtls can't be driven by `vim.lsp.enable`, so
+    -- nvim-jdtls starts it per-buffer from after/ftplugin/java.lua.
+    gh("mfussenegger/nvim-jdtls"),
 
     -- Navigation
     gh("ThePrimeagen/harpoon", { version = "harpoon2" }),
@@ -103,6 +113,7 @@ require("metalpietie.plugins.fugitive")
 require("metalpietie.plugins.snippets")
 require("metalpietie.plugins.completion")
 require("metalpietie.plugins.conform")
+require("metalpietie.plugins.dap")
 require("metalpietie.plugins.flutter")
 require("metalpietie.plugins.ng")
 require("metalpietie.plugins.harpoon")

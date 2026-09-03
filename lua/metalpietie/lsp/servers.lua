@@ -5,7 +5,8 @@
 -- merged on top of that, applied via `vim.lsp.config()` in the sibling init.lua.
 --
 -- dartls is deliberately absent: flutter-tools owns it and starts it from the
--- Flutter SDK, not from mason.
+-- Flutter SDK, not from mason. jdtls is absent for the same reason — nvim-jdtls
+-- starts it per-project, see metalpietie.lsp.jdtls.
 
 local M = {}
 

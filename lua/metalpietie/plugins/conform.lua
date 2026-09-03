@@ -24,6 +24,15 @@ conform.setup({
         php = { "php_cs_fixer" },
         dart = { "dart_format" },
         lua = { "stylua" },
+        java = { "google-java-format" },
+    },
+
+    formatters = {
+        -- Google's own style is 2-space; --aosp switches it to the 4-space
+        -- variant, which is what Minecraft, Fabric and NeoForge sources use.
+        ["google-java-format"] = {
+            prepend_args = { "--aosp" },
+        },
     },
 
     -- Only Go formats automatically, matching the previous BufWritePre hook.

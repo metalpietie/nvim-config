@@ -5,6 +5,9 @@ require("metalpietie.keymaps")
 require("metalpietie.pack")
 require("metalpietie.autocmds")
 require("metalpietie.lsp")
+-- Defines :Gradle and the <leader>M maps. jdtls (started per-buffer from
+-- after/ftplugin/java.lua) reuses its project-root detection.
+require("metalpietie.gradle")
 
 -- Reload a lua module by name. Handy during config hacking.
 function R(name)

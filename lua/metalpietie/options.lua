@@ -50,11 +50,22 @@ vim.g.netrw_winsize = 0
 vim.filetype.add({
     extension = {
         templ = "templ",
+
+        -- Minecraft modding.
+        -- pack.mcmeta and the other *.mcmeta files are plain JSON.
+        mcmeta = "json",
+        -- Datapack functions: no bundled syntax, but a filetype of its own
+        -- gives after/ftplugin somewhere to set the '#' commentstring.
+        mcfunction = "mcfunction",
+        -- Fabric access wideners are line-oriented, '#'-commented config.
+        accesswidener = "conf",
     },
     pattern = {
         -- Angular component templates. Without this they come through as plain
         -- `html`, which loses the angular treesitter parser and the angularls
         -- template intelligence (control flow, bindings, pipes).
         [".*%.component%.html"] = "htmlangular",
+        -- NeoForge access transformers, same shape as Fabric's wideners.
+        [".*%.accesstransformer%.cfg"] = "conf",
     },
 })

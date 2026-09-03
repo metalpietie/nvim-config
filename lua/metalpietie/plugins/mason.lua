@@ -24,6 +24,9 @@ require("mason-lspconfig").setup({
 -- Non-LSP tooling: formatters, linters and the treesitter parser compiler.
 -- mason-lspconfig only covers language servers, so these are installed directly
 -- through the registry rather than pulling in another plugin.
+-- jdtls is here rather than in mason_ensure_installed because nvim-jdtls
+-- launches it itself (see metalpietie.lsp.jdtls); mason-lspconfig would only
+-- try to wire it into vim.lsp.enable.
 local tools = {
     "prettierd",
     "gofumpt",
@@ -31,6 +34,12 @@ local tools = {
     "php-cs-fixer",
     "stylua",
     "tree-sitter-cli",
+
+    -- Java / Minecraft modding
+    "jdtls",
+    "java-debug-adapter",
+    "java-test",
+    "google-java-format",
 }
 
 local ok, registry = pcall(require, "mason-registry")

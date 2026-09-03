@@ -12,6 +12,8 @@ first start.
   also available from `npm i -g tree-sitter-cli`
 - Optional per language: `go`, `node`/`npm`, `php`/`composer`,
   Flutter SDK at `~/development/flutter`
+- **JDK 21+** for Java / Minecraft modding — jdtls won't start without one.
+  See [Minecraft modding](#minecraft-modding).
 
 ## Layout
 
@@ -25,8 +27,12 @@ lua/metalpietie/
   autocmds.lua                yank highlight, trailing-whitespace trim
   lsp/init.lua                capabilities, diagnostics, LspAttach keymaps
   lsp/servers.lua             per-server config + mason ensure_installed
+  lsp/jdtls.lua               jdtls launcher: JDK discovery, Minecraft settings
+  gradle.lua                  :Gradle, project root, <leader>M maps
   plugins/*.lua               one file per plugin
 after/ftplugin/go.lua         Go uses tabs
+after/ftplugin/java.lua       starts jdtls for the buffer
+after/ftplugin/mcfunction.lua datapack functions
 ```
 
 ## Plugins
@@ -35,8 +41,8 @@ Managed by `vim.pack`. Update everything with `<leader>pu` (`vim.pack.update()`)
 
 treesitter · telescope (+fzf-native) · nvim-notify · fugitive · LuaSnip
 (+friendly-snippets) · lualine · blink.cmp · mason (+mason-lspconfig) ·
-nvim-lspconfig · conform · flutter-tools · ng.nvim · harpoon2 · undotree ·
-fidget · rose-pine
+nvim-lspconfig · conform · flutter-tools · ng.nvim · nvim-jdtls · nvim-dap
+(+dap-ui, nvim-nio, dap-virtual-text) · harpoon2 · undotree · fidget · rose-pine
 
 Two plugins need compiling; `pack.lua` handles it through the `PackChanged`
 autocmd (`vim.pack` has no build field): LuaSnip's `jsregexp` and
@@ -54,6 +60,7 @@ autocmd (`vim.pack` has no build field): LuaSnip's `jsregexp` and
 | PHP / WordPress | `intelephense` (WP/Woo/ACF stubs) | `php-cs-fixer` |
 | Symfony | `vimfony` (only in Symfony projects) | — |
 | Dart / Flutter | `dartls` via flutter-tools | `dart_format` |
+| Java / Minecraft | `jdtls` via nvim-jdtls (+ debugger, test runner) | `google-java-format --aosp` |
 | Lua | `lua_ls` | `stylua` |
 
 Go is the only filetype that formats on save; everything else is `<leader>f`.
@@ -70,6 +77,59 @@ get the `angular` parser and template-aware diagnostics.
 
 Free stubs (WordPress included) work as-is. If you have a licence key, put it in
 `~/.config/intelephense/licence.txt` — intelephense reads it itself.
+
+## Minecraft modding
+
+Set up for **Fabric** and **NeoForge**. mason installs `jdtls`,
+`java-debug-adapter`, `java-test` and `google-java-format`; nothing else needs
+configuring per project.
+
+### JDK
+
+Install a JDK yourself — mason does not ship one, and jdtls needs **21+** to
+run. Minecraft 1.20.5 and newer also compile against 21 (1.17–1.20.4 want 17).
+[Temurin](https://adoptium.net/) is the usual choice; the Minecraft launcher's
+bundled runtimes are JREs and won't do, since Gradle needs `javac`.
+
+`lsp/jdtls.lua` finds JDKs on its own — `JAVA_HOME`, `java` on `PATH`,
+`C:\Program Files\{Java,Eclipse Adoptium,Microsoft,Amazon Corretto,Zulu}`,
+`~/.gradle/jdks` (Gradle's toolchain downloads) and `~/.jdks` — and hands the
+whole set to jdtls as `java.configuration.runtimes`, so a build.gradle asking
+for a toolchain other than the newest one still resolves. `:lua vim.print(
+require("metalpietie.lsp.jdtls").jdks())` shows what it found.
+
+### Project import
+
+jdtls uses the *outermost* `settings.gradle`, so multi-loader templates
+(Architectury: `common/`, `fabric/`, `neoforge/` under one build) import as a
+single workspace instead of three disconnected ones. The Gradle wrapper is
+always used, since Loom and NeoGradle pin the version they need.
+
+Import is set to `interactive`: after editing `build.gradle` (new dependency,
+bumped mappings), re-import with `<leader>Ju` — it doesn't happen on save,
+because a mod re-import is slow.
+
+Run `<leader>Mg` (`gradlew genSources`) once per project to decompile Minecraft;
+`gd` into vanilla classes then lands in real sources. Until that runs, jdtls
+falls back to Fernflower for classes without sources.
+
+### Debugging the game
+
+Minecraft can't be started from a debug config — the dev client only works with
+the classpath and loader tweaks Gradle applies. So:
+
+1. `<leader>MR` → `gradlew runClient --debug-jvm`. The forked JVM suspends and
+   listens on port 5005.
+2. `<F5>` → **Attach to Minecraft (localhost:5005)**.
+
+Breakpoints, stepping and hot code replace work from there. The `java` DAP
+adapter is registered when jdtls attaches, so open a `.java` file before `<F5>`.
+
+### Filetypes
+
+`*.mcmeta` → JSON · `*.accesswidener` and `*.accesstransformer.cfg` → `conf` ·
+`*.mcfunction` → own filetype with `#` comments. `fabric.mod.json`,
+`neoforge.mods.toml` and mixin configs are covered by their extensions already.
 
 ## Keybindings
 
@@ -162,6 +222,44 @@ LuaSnip uses.
 ### Flutter
 `<leader>Fr` run · `<leader>FR` restart · `<leader>Fq` quit · `<leader>Fd`
 devices · `<leader>Fe` emulators · `<leader>Fo` outline · `<leader>Fl` log
+
+### Java (buffer-local, jdtls)
+| Key | Action |
+|---|---|
+| `<leader>Jo` | organize imports |
+| `<leader>Jv` / `<leader>Jc` | extract variable / constant (normal + visual) |
+| `<leader>Jm` (visual) | extract method |
+| `<leader>Jt` / `<leader>JT` | test method under cursor / test class |
+| `<leader>Ju` | re-import the Gradle build (`:JdtUpdateConfig`) |
+| `<leader>Jr` | restart jdtls |
+
+### Gradle / Minecraft
+`:Gradle {task…}` runs the project's wrapper in a terminal split (with task
+completion); `:GradleRoot` shows the detected build root.
+
+| Key | Task |
+|---|---|
+| `<leader>Mb` / `<leader>Mc` | `build` / `clean` |
+| `<leader>Mr` / `<leader>MR` | `runClient` / `runClient --debug-jvm` |
+| `<leader>Ms` | `runServer` |
+| `<leader>Md` | `runDatagen` |
+| `<leader>Mg` | `genSources` (decompile Minecraft) |
+| `<leader>Mt` | `test` |
+| `<leader>Mf` | `build --refresh-dependencies` |
+| `<leader>Mu` | re-import into jdtls |
+
+### Debugging (nvim-dap)
+| Key | Action |
+|---|---|
+| `<F5>` / `<leader>Dc` | start or continue (picks a configuration) |
+| `<F10>` `<F11>` `<F12>` | step over / into / out |
+| `<leader>Do` `<leader>Di` `<leader>DO` | step over / into / out |
+| `<leader>Db` / `<leader>DB` | breakpoint / conditional breakpoint |
+| `<leader>Dl` | log point |
+| `<leader>DC` | clear all breakpoints |
+| `<leader>Dh` | hover value under cursor |
+| `<leader>Dr` / `<leader>Du` | toggle repl / toggle UI |
+| `<leader>Dx` | terminate session |
 
 ### Misc
 `<leader>nd` dismiss notifications · `<leader>pu` update plugins

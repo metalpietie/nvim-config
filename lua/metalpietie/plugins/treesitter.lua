@@ -25,6 +25,9 @@ local parsers = {
     "php", "php_only", "phpdoc", "twig",
     -- dart / flutter
     "dart",
+    -- java / minecraft modding (gradle builds are groovy or kotlin DSL,
+    -- gradle.properties is `properties`)
+    "java", "groovy", "kotlin", "properties",
     -- data & config
     -- jsonc is served by the `json` parser upstream; there is no separate one.
     "json", "json5", "yaml", "toml", "xml", "sql", "dockerfile",
@@ -61,6 +64,8 @@ end
 -- detects them as the `htmlangular` filetype.
 vim.treesitter.language.register("angular", "htmlangular")
 vim.treesitter.language.register("templ", "templ")
+-- Neovim calls .properties files `jproperties`; the parser is named `properties`.
+vim.treesitter.language.register("properties", "jproperties")
 
 local group = vim.api.nvim_create_augroup("metalpietie-treesitter", { clear = true })
 
