@@ -55,6 +55,7 @@ vim.pack.add({
     -- Fuzzy finding
     gh("nvim-telescope/telescope.nvim"),
     gh("nvim-telescope/telescope-fzf-native.nvim"),
+    gh("nvim-telescope/telescope-ui-select.nvim"),
 
     -- UI
     gh("rcarriga/nvim-notify"),
